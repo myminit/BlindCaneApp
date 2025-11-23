@@ -12,25 +12,25 @@ export default StyleSheet.create({
   },
   header: {
     width: '100%',
-    paddingVertical: 18, // เพิ่มเพื่อรับขนาดตัวอักษรที่ใหญ่ขึ้น
+    paddingVertical: 18, 
     paddingHorizontal: 6,
-    marginTop: 12,       // เลื่อนลงเล็กน้อยจากบน
+    marginTop: 12,      
     marginBottom: 8,
   },
   appName: {
     color: '#fff',
-    fontSize: 24, // ขยายขนาดหัวเรื่องเป็น 24 (ปรับเป็น 26/28 ถ้าต้องการใหญ่ขึ้น)
+    fontSize: 24, 
     fontWeight: '700',
   },
   appTag: {
     color: '#bbb',
-    fontSize: 16, // เล็กน้อยใหญ่ขึ้นเพื่อให้สัดส่วนดูสมดุล
+    fontSize: 16,
     marginTop: 2,
   },
   statusRow: {
     width: '100%',
     alignItems: 'flex-start',
-    marginBottom: 28, // เพิ่มช่องว่างระหว่างสถานะกับการ์ดวิธีใช้
+    marginBottom: 28, 
   },
   statusBadge: {
     backgroundColor: '#111',
@@ -42,7 +42,7 @@ export default StyleSheet.create({
   },
   statusTextSmall: {
     color: '#fff',
-    fontSize: 16,   // เพิ่มขนาดตัวอักษรสถานะ
+    fontSize: 16,   
     fontWeight: '600',
   },
   descriptionCard: {
@@ -51,14 +51,14 @@ export default StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 14,
-    marginTop: 18,    // เว้นช่องว่างด้านบนให้มากขึ้น
-    marginBottom: 12, // ลดช่องว่างเพื่อให้การ์ดอยู่ใกล้ปุ่มมากขึ้น
+    marginTop: 18,    
+    marginBottom: 12,
     borderColor: '#2a2a2a',
     borderWidth: 1,
   },
   descriptionTitle: {
     color: '#FFD700',
-    fontSize: 18,   // เพิ่มขนาดหัวข้อวิธีใช้
+    fontSize: 18,  
     fontWeight: '700',
     marginBottom: 8,
   },
@@ -103,8 +103,8 @@ export default StyleSheet.create({
   },
   secondaryText: {
     color: '#fff',
-    fontSize: 20,    // เพิ่มขนาดจาก 17 -> 20
-    fontWeight: '700', // เพิ่มน้ำหนักให้เด่นขึ้น
+    fontSize: 20,    
+    fontWeight: '700',
   },
   deviceList: {
     marginTop: 18,
@@ -138,7 +138,7 @@ export default StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center', 
     alignItems: 'center',
-    paddingVertical: 8, // ลด padding เพื่อให้ปุ่มหลักอยู่ใกล้การ์ดขึ้น
+    paddingVertical: 8, 
   },
   hintText: {
     color: '#9aa0a6',

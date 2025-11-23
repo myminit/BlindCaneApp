@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import BluetoothService from './services/BluetoothService';
 import * as Speech from 'expo-speech';
-import styles from './styles'; // นำเข้า styles ที่ย้ายไปยังไฟล์แยก
+import styles from './styles'; 
 
 export default function App() {
   const [connected, setConnected] = useState(false);
@@ -23,7 +23,7 @@ export default function App() {
   // เพิ่ม state เก็บ voice ที่เลือกได้
   const [selectedVoice, setSelectedVoice] = useState(null);
 
-  // ดึง voices ตอนเริ่มต้นและเลือกเสียงไทยถ้ามี
+  // ดึง voices 
   useEffect(() => {
     let mounted = true;
     (async () => {
