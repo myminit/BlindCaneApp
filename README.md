@@ -57,7 +57,7 @@
 
 1.  **Clone โปรเจกต์:**
     ```bash
-    git clone [https://github.com/your-username/smart-blind-stick.git](https://github.com/your-username/smart-blind-stick.git)
+    git clone https://github.com/myminit/BlindCaneApp.git
     ```
 
 2.  **ติดตั้ง Library:**
