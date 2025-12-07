@@ -1,150 +1,39 @@
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-    paddingHorizontal: 18,
-    paddingBottom: 24,
-    paddingTop: 40,      
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  header: {
-    width: '100%',
-    paddingVertical: 18, 
-    paddingHorizontal: 6,
-    marginTop: 12,      
-    marginBottom: 8,
-  },
-  appName: {
-    color: '#fff',
-    fontSize: 24, 
-    fontWeight: '700',
-  },
-  appTag: {
-    color: '#bbb',
-    fontSize: 16,
-    marginTop: 2,
-  },
-  statusRow: {
-    width: '100%',
-    alignItems: 'flex-start',
-    marginBottom: 28, 
-  },
-  statusBadge: {
-    backgroundColor: '#111',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  statusTextSmall: {
-    color: '#fff',
-    fontSize: 16,   
-    fontWeight: '600',
-  },
-  descriptionCard: {
-    width: '100%',
-    backgroundColor: '#0f1113', 
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    marginTop: 18,    
-    marginBottom: 12,
-    borderColor: '#2a2a2a',
-    borderWidth: 1,
-  },
-  descriptionTitle: {
-    color: '#FFD700',
-    fontSize: 18,  
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  descriptionText: {
-    color: '#ddd',
-    fontSize: 17,
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  button: {
-    paddingVertical: 28,    
-    paddingHorizontal: 28,
-    minHeight: 64,           
-    borderRadius: 20,        
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 20,        
-  },
-  buttonDefault: {
-    backgroundColor: '#1E90FF',
-  },
-  buttonConnected: {
-    backgroundColor: '#32CD32',
-  },
-  buttonText: {
-    fontSize: 20,          
-    color: '#000',
-    textAlign: 'center',
-    fontWeight: '700',
-  },
-  secondaryButton: {
-    marginTop: 16,           
-    paddingVertical: 18,
-    paddingHorizontal: 22,
-    minHeight: 56,          
-    borderRadius: 16,
-    backgroundColor: '#1A1A1A',
-    width: '100%',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  secondaryText: {
-    color: '#fff',
-    fontSize: 20,    
-    fontWeight: '700',
-  },
-  deviceList: {
-    marginTop: 18,
-    width: '100%',
-  },
-  deviceItem: {
-    padding: 14,
-    backgroundColor: '#0d0d0d',
-    borderRadius: 10,
-    marginBottom: 10,
-    borderColor: '#222',
-    borderWidth: 1,
-  },
-  deviceName: {
-    color: '#FFD700',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  deviceId: {
-    color: '#aaa',
-    fontSize: 12,
-    marginTop: 6,
-  },
-  emptyText: {
-    color: '#888',
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  mainArea: {
-    width: '100%',
-    flexGrow: 1,
-    justifyContent: 'center', 
-    alignItems: 'center',
-    paddingVertical: 8, 
-  },
-  hintText: {
-    color: '#9aa0a6',
-    fontSize: 13,
-    marginTop: 4,
-  },
+  container: { flex: 1, backgroundColor: '#fff', padding: 12 },
+  header: { marginBottom: 8 },
+  appName: { fontSize: 22, fontWeight: '700' },
+  appTag: { fontSize: 14, color: 'gray' },
+
+  statusRow: { marginVertical: 8 },
+  statusBadge: { backgroundColor: '#EFEFEF', padding: 8, borderRadius: 8 },
+  statusTextSmall: { fontSize: 13, color: '#333' },
+
+  descriptionCard: { backgroundColor: '#f8f8f8', padding: 12, borderRadius: 8, marginBottom: 12 },
+  descriptionTitle: { fontWeight: '700', marginBottom: 4 },
+  descriptionText: { color: '#444' },
+
+  mainArea: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  button: { flex: 1, padding: 14, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
+  buttonDefault: { backgroundColor: '#4C9AFF' },
+  buttonConnected: { backgroundColor: '#4CAF50' },
+  buttonText: { color: '#fff', fontWeight: '700' },
+
+  secondaryButton: { padding: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14, borderWidth: 1, borderColor: '#ddd' },
+  secondaryText: { color: '#333' },
+
+  deviceList: { maxHeight: 160, marginBottom: 8 },
+  deviceItem: { padding: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  deviceName: { fontWeight: '600' },
+  deviceId: { fontSize: 12, color: 'gray' },
+
+  eventsHeader: { marginTop: 8, marginBottom: 4 },
+  eventsTitle: { fontWeight: '700' },
+  eventsList: { flex: 1 },
+  eventItem: { padding: 10, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+  eventTitle: { fontWeight: '700' },
+  eventText: { color: '#333', marginTop: 4 },
+
+  emptyText: { color: 'gray', padding: 12, textAlign: 'center' }
 });
-
-

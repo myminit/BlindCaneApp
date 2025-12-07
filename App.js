@@ -14,6 +14,50 @@ import BluetoothService from './services/BluetoothService';
 import * as Speech from 'expo-speech';
 import styles from './styles';
 
+// -----------------------
+// ฟังก์ชันช่วยเหลือ
+// -----------------------
+const speakText = (msg, selectedVoice) => {
+  if (!msg) return;
+  try {
+    Speech.stop();
+    const options = {};
+    if (selectedVoice && selectedVoice.identifier) options.voice = selectedVoice.identifier;
+    else options.language = 'th-TH';
+    Speech.speak(msg, options);
+  } catch (e) {
+    try { AccessibilityInfo.announceForAccessibility(msg); } catch (err) {}
+  }
+};
+
+// แปลง JSON event → ข้อความที่จะส่งไป server/LINE
+function formatMessageForLine(json) {
+  if (!json || json.type !== 'event') {
+    return 'ได้รับข้อมูลจากไม้เท้า แต่รูปแบบไม่ถูกต้อง';
+  }
+
+  const ev = (json.event || '').toString().toLowerCase();
+
+  if (ev === 'fall') {
+    const impact = json.impact_g != null ? json.impact_g : 'ไม่ทราบ';
+    const recent = json.fall_recent ? 'ใช่' : 'ไม่ใช่';
+    return `⚠️ ตรวจพบการล้ม!\nแรงกระแทก: ${impact} G\nล้มซ้ำภายใน 5 วินาที: ${recent}`;
+  }
+
+  if (ev === 'obstacle') {
+    const front = json.front_cm != null ? json.front_cm : 'ไม่ทราบ';
+    const side = json.side_cm != null ? json.side_cm : 'ไม่ทราบ';
+    return `🚧 พบสิ่งกีดขวางด้านหน้า\nด้านหน้า: ${front} cm\nด้านข้าง: ${side} cm`;
+  }
+
+  if (ev === 'step') {
+    const side = json.side_cm != null ? json.side_cm : 'ไม่ทราบ';
+    return `⬆️ พบทางต่างระดับด้านข้าง ${side} cm`;
+  }
+
+  return `📢 Event: ${json.event || 'ไม่ทราบ'}`;
+}
+
 export default function App() {
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState('ยังไม่เชื่อมต่อ');
@@ -22,22 +66,20 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [events, setEvents] = useState([]);
 
-  // ✅ เรียกขอ permission ทันทีเมื่อแอปเปิด
   useEffect(() => {
     (async () => {
       try {
-        console.log('🔵 App started - requesting Bluetooth permissions...');
+        setStatus('กำลังขอ permission...');
         const granted = await BluetoothService.requestPermissions();
         setPermissionGranted(granted);
-        
+
         if (granted) {
-          console.log('✅ Bluetooth permissions granted');
           setStatus('พร้อมใช้งาน - กดเพื่อสแกน');
         } else {
-          console.log('❌ Bluetooth permissions denied');
           setStatus('⚠️ ไม่ได้รับอนุญาต - ตรวจสอบ Settings');
-          announce('กรุณาอนุญาต Bluetooth permission ใน Settings');
+          try { AccessibilityInfo.announceForAccessibility('กรุณาอนุญาต Bluetooth permission ใน Settings'); } catch (e) {}
         }
       } catch (error) {
         console.error('Permission request failed:', error);
@@ -71,54 +113,105 @@ export default function App() {
         '1. หากต้องการฟังวิธีใช้งานกดปุ่มแรก ' +
         '2. กดปุ่มตรงกลางหน้าจอเพื่อเชื่อมต่อ ' +
         '3. หากไม่พบอุปกรณ์ ให้กดปุ่มที่สองเพื่อสแกน';
-      speak(msg);
+      speakText(msg, selectedVoice);
     }, 1000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [selectedVoice]);
+
+  // ⭐ รับ event JSON จาก Bluetooth + ส่งไป server + ส่งข้อความเพิ่มเติม
+  useEffect(() => {
+    BluetoothService.setOnMessage(async (jsonObj) => {
+      // เพิ่ม event ใน list
+      setEvents(prev => [{ id: Date.now().toString(), payload: jsonObj }, ...prev]);
+
+      // แปลงเป็นข้อความสำหรับส่งไป server/LINE
+      const messageToSend = formatMessageForLine(jsonObj);
+
+      // ส่งไป server แบบ { message: "..." }
+      try {
+        await fetch("https://34781ec4-2651-4b6d-9049-8ea6f9c1ba91-00-3jz8slmp2iyx2.pike.replit.dev/iot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: messageToSend })
+        });
+        console.log("ส่งไป server แล้ว:", messageToSend);
+      } catch (err) {
+        console.log("ส่ง event ไป server ไม่สำเร็จ:", err);
+      }
+
+      // ส่งข้อความเพิ่มเติม (ถ้าต้อง) - เรียก API /message
+      try {
+        await fetch("https://34781ec4-2651-4b6d-9049-8ea6f9c1ba91-00-3jz8slmp2iyx2.pike.replit.dev/message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            message: messageToSend,
+            event: jsonObj.event,
+            timestamp: new Date().toISOString()
+          })
+        });
+        console.log("ส่งข้อความเพิ่มเติมไป /message แล้ว");
+      } catch (err) {
+        console.log("ส่ง message ไป /message ไม่สำเร็จ:", err);
+      }
+
+      // พูดเหตุการณ์ (บนมือถือ) และสั่น
+      try {
+        if (jsonObj && jsonObj.event) {
+          const tmsg = `ได้รับเหตุการณ์ ${jsonObj.event}`;
+          speakText(tmsg, selectedVoice);
+          try { AccessibilityInfo.announceForAccessibility(tmsg); } catch (e) {}
+          Vibration.vibrate(100);
+        }
+      } catch (e) {
+        console.log('onMessage handler error', e);
+      }
+    });
+
+    BluetoothService.setOnConnectionChange((isConn, deviceName) => {
+      setConnected(isConn);
+      if (isConn) {
+        setStatus(`เชื่อมต่อแล้ว: ${deviceName || 'อุปกรณ์'}`);
+      } else {
+        setStatus('ยังไม่เชื่อมต่อ');
+      }
+    });
+
+    return () => {
+      BluetoothService.setOnMessage(null);
+      BluetoothService.setOnConnectionChange(null);
+    };
+  }, [selectedVoice]);
 
   const speak = (msg) => {
-    if (!msg) return;
-    try {
-      Speech.stop();
-      const options = {};
-      if (selectedVoice && selectedVoice.identifier) options.voice = selectedVoice.identifier;
-      else options.language = 'th-TH';
-      Speech.speak(msg, options);
-    } catch (e) {
-      try {
-        AccessibilityInfo.announceForAccessibility(msg);
-      } catch (err) {}
-    }
+    speakText(msg, selectedVoice);
   };
 
   const announce = (msg) => {
     try {
-      if (msg) {
-        AccessibilityInfo.announceForAccessibility(msg);
-      }
-    } catch (e) {
-      console.log('Announce error:', e);
-    }
+      if (msg) AccessibilityInfo.announceForAccessibility(msg);
+    } catch (e) {}
   };
 
   const handleScan = async () => {
-    // ✅ ตรวจสอบ permission ก่อนสแกน
     if (!permissionGranted) {
       setStatus('⚠️ ไม่ได้รับอนุญาต - ตรวจสอบ Settings');
       announce('กรุณาให้ Bluetooth permission ใน Settings');
       return;
     }
-
     if (scanning) return;
+
     setScanning(true);
     setStatus('กำลังสแกนอุปกรณ์...');
     announce('กำลังสแกนอุปกรณ์บลูทูธ');
     setDevices([]);
-    
+
     try {
       const found = await BluetoothService.scanForDevices();
       setDevices(found);
-      const msg = found.length ? `พบ ${found.length} อุปกรณ์` : 'ไม่พบอุปกรณ์ ลองตรวจสอบว่าเปิดบลูทูธและ GPS หรือยัง';
+      const msg = found.length
+        ? `พบ ${found.length} อุปกรณ์`
+        : 'ไม่พบอุปกรณ์ ลองตรวจสอบว่าเปิดบลูทูธหรือยัง';
       setStatus(msg);
       announce(msg);
     } catch (e) {
@@ -131,18 +224,12 @@ export default function App() {
   };
 
   const handleConnect = async (device) => {
-    // ฟังก์ชั่นนี้ใช้สำหรับเชื่อมต่อกับอุปกรณ์บลูทูธที่เลือก
-    // ขั้นตอน:
-    // 1. ตั้งค่า busy = true (ป้องกันการคลิกซ้ำ)
-    // 2. เรียก BluetoothService.connectToDevice(device.id) เพื่อเชื่อมต่อ
-    // 3. ถ้าเชื่อมต่อสำเร็จ ตั้งค่า connected = true
-    // 4. ส่งสัญญาณการสั่น (Vibration) เพื่อแจ้งผู้ใช้
-    // 5. ตั้งค่า busy = false เมื่อเสร็จ
     if (busy) return;
+
     setBusy(true);
     setStatus(`กำลังเชื่อมต่อ ${device.name}...`);
     announce('กำลังเชื่อมต่อ');
-    
+
     try {
       const ok = await BluetoothService.connectToDevice(device.id);
       if (ok) {
@@ -163,18 +250,12 @@ export default function App() {
   };
 
   const handleDisconnect = async () => {
-    // ฟังก์ชั่นนี้ใช้สำหรับตัดการเชื่อมต่อบลูทูธ
-    // ขั้นตอน:
-    // 1. ตั้งค่า busy = true
-    // 2. เรียก BluetoothService.disconnect() เพื่อตัดการเชื่อมต่อ
-    // 3. ตั้งค่า connected = false
-    // 4. ส่งสัญญาณการสั่นแบบลำดับ (pulse) เพื่อแจ้งผู้ใช้
-    // 5. ตั้งค่า busy = false เมื่อเสร็จ
     if (busy) return;
+
     setBusy(true);
     setStatus('กำลังตัดการเชื่อมต่อ...');
     announce('กำลังตัดการเชื่อมต่อ');
-    
+
     try {
       await BluetoothService.disconnect();
       setConnected(false);
@@ -204,13 +285,6 @@ export default function App() {
     </TouchableOpacity>
   );
 
-  // Logic for the main button action
-  const mainButtonLabel = connected
-    ? 'ตัดการเชื่อมต่อ'
-    : (devices.length > 0
-      ? `เชื่อมต่อ ${devices[0].name || 'อุปกรณ์แรก'}`
-      : (scanning ? 'กำลังสแกน...' : 'กดเพื่อเริ่มสแกน'));
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -229,6 +303,7 @@ export default function App() {
         accessible
         accessibilityRole="button"
         accessibilityLabel="ฟังวิธีใช้งาน"
+        onPress={() => speak('กดปุ่มกลางเพื่อเชื่อมต่อ. หากไม่พบอุปกรณ์ให้กดสแกน')}
       >
         <Text style={styles.descriptionTitle}>วิธีใช้</Text>
         <Text style={styles.descriptionText}>
@@ -253,11 +328,11 @@ export default function App() {
             <ActivityIndicator size="large" color="#000" />
           ) : (
             <Text style={styles.buttonText}>
-              {connected 
-                ? 'ตัดการเชื่อมต่อ' 
-                : devices.length > 0 
-                  ? `เชื่อมต่อ ${devices[0].name}`
-                  : scanning 
+              {connected
+                ? 'ตัดการเชื่อมต่อ'
+                : devices.length > 0
+                  ? `เชื่อมต่อ ${devices[0].name || 'อุปกรณ์แรก'}`
+                  : scanning
                     ? 'กำลังสแกน...'
                     : 'กดเพื่อเชื่อมต่อ/สแกน'}
             </Text>
@@ -284,6 +359,26 @@ export default function App() {
             {scanning ? 'กำลังค้นหา...' : 'กดปุ่มสแกนเพื่อเริ่มค้นหา'}
           </Text>
         }
+      />
+
+      <View style={styles.eventsHeader}>
+        <Text style={styles.eventsTitle}>Events จากไม้เท้า</Text>
+      </View>
+
+      <FlatList
+        data={events}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => {
+          const payload = item.payload || {};
+          return (
+            <View style={styles.eventItem}>
+              <Text style={styles.eventTitle}>{payload.event || 'unknown'}</Text>
+              <Text style={styles.eventText}>{JSON.stringify(payload)}</Text>
+            </View>
+          );
+        }}
+        style={styles.eventsList}
+        ListEmptyComponent={<Text style={styles.emptyText}>ยังไม่มีเหตุการณ์</Text>}
       />
     </SafeAreaView>
   );
