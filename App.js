@@ -55,10 +55,6 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    BluetoothService.requestPermissions();
-  }, []);
-
   const speak = (msg) => {
     if (!msg) return;
     try {
@@ -74,6 +70,7 @@ export default function App() {
       } catch (err) {
         console.log('announce error', err);
       }
+      
     }
   };
 
